@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LMS Search Assistant</title>
+<style>
+:root{
+  --bg:#f6f7fb; --surface:#ffffff; --text:#1c2033; --muted:#6b7190; --border:#e3e6f0;
+  --accent:#4f46e5; --accent-soft:#eceafd; --on-accent:#ffffff;
+  --good:#0f9d6b; --good-soft:#e3f6ee; --warn:#a86a0a; --warn-soft:#fdf3dc;
+  --bad:#d64545; --bad-soft:#fde8e8;
+  --shadow:0 1px 2px rgba(20,24,50,.06),0 8px 24px rgba(20,24,50,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1220; --surface:#171b2e; --text:#e8eaf6; --muted:#9aa0c3; --border:#2a3050;
+    --accent:#8b85ff; --accent-soft:#25264d; --on-accent:#10122a;
+    --good:#3ecf9a; --good-soft:#12302a; --warn:#f0b84a; --warn-soft:#3a2f14;
+    --bad:#ff7b7b; --bad-soft:#3b1d22; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+.top{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+.bar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.logo{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--accent-soft)}
+.tabs{display:flex;gap:4px}
+.tab{border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+.tab:hover{background:var(--accent-soft);color:var(--text)}
+.tab.active{background:var(--accent-soft);color:var(--accent)}
+.count{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:12px;text-align:center}
+main{padding-bottom:60px}
+.hero{text-align:center;padding:40px 0 20px}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:0 0 8px;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted)}
+.searchbox{display:flex;flex-wrap:wrap;gap:8px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:8px;box-shadow:var(--shadow)}
+.searchbox input{flex:1 1 260px;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:16px;padding:10px 12px}
+.searchbox select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:8px 10px;font:inherit}
+button.primary{border:0;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:700;padding:10px 22px;border-radius:10px;cursor:pointer}
+button.primary:disabled{opacity:.6;cursor:wait}
+button.primary:focus-visible,.chip:focus-visible,.tab:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);padding:6px 12px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.stack>*+*{margin-top:14px}
+#result{margin-top:22px}
+.banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-radius:12px;font-weight:600}
+.banner.good{background:var(--good-soft);color:var(--good)}
+.banner.warn{background:var(--warn-soft);color:var(--warn)}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.msg{margin:0;font-size:16px}
+h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;font-size:14px;align-items:center}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.tag{display:inline-block;background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:999px;font-size:13px;margin:2px 6px 2px 0;font-weight:600}
+.meter{height:8px;background:var(--border);border-radius:999px;overflow:hidden;max-width:220px}
+.meter>i{display:block;height:100%;background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.course{display:flex;flex-direction:column;gap:6px}
+.course h4{margin:0;font-size:16px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;text-transform:capitalize}
+.lvl-beginner{background:var(--good-soft);color:var(--good)}
+.lvl-intermediate{background:var(--warn-soft);color:var(--warn)}
+.lvl-advanced{background:var(--bad-soft);color:var(--bad)}
+.why{color:var(--muted);font-size:13px}
+.lesson{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.lesson:first-of-type{border-top:0}
+.lesson small{color:var(--muted)}
+.feedback{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.feedback button{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:16px}
+.feedback button:hover{border-color:var(--accent)}
+.foot{color:var(--muted);font-size:12px}
+.skeleton{height:90px;border-radius:14px;background:linear-gradient(90deg,var(--border),var(--accent-soft),var(--border));background-size:200% 100%;animation:shine 1.2s linear infinite}
+@keyframes shine{to{background-position:-200% 0}}
+@media (prefers-reduced-motion: reduce){.skeleton{animation:none}}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+tr.clickable{cursor:pointer} tr.clickable:hover{background:var(--accent-soft)}
+.table-scroll{overflow-x:auto}
+pre{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;overflow:auto;font-size:12px;max-height:320px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.stat{flex:1 1 130px;text-align:center}
+.stat b{display:block;font-size:24px}
+.stat span{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:24px}
+.small-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);padding:5px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px}
+.small-btn:hover{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar-row">
+    <div class="brand"><span class="logo" aria-hidden="true">🔎</span><span>LMS Search Assistant</span></div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab active" data-tab="search">Search</button>
+      <button class="tab" data-tab="history">History</button>
+      <button class="tab" data-tab="review">Review queue <span id="reviewCount" class="count" hidden>0</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="tab-search">
+    <div class="hero">
+      <h1>What do you want to learn?</h1>
+      <p>Describe it in your own words. Results come only from the LMS catalog.</p>
+    </div>
+    <form id="searchForm" class="searchbox" autocomplete="off">
+      <input id="q" type="text" maxlength="200" placeholder="e.g. something to get better at pivot tables" aria-label="Search query">
+      <select id="learner" aria-label="Learner"><option value="">Anonymous</option></select>
+      <button id="go" class="primary" type="submit">Search</button>
+    </form>
+    <div id="examples" class="chips" aria-label="Example searches"></div>
+    <div id="result" aria-live="polite"></div>
+  </section>
+
+  <section id="tab-history" hidden>
+    <div class="hero"><h1>Search history</h1><p>Every query is logged. Click a row to see its full trace.</p></div>
+    <div id="stats" class="stats"></div>
+    <div class="card"><div class="table-scroll"><table>
+      <thead><tr><th>#</th><th>Query</th><th>Intent</th><th>Status</th><th>When</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table></div></div>
+    <div id="traceBox" class="card" style="margin-top:14px" hidden>
+      <h3>Trace for query <span id="traceId"></span></h3>
+      <pre id="traceJson"></pre>
+    </div>
+  </section>
+
+  <section id="tab-review" hidden>
+    <div class="hero"><h1>Human review queue</h1><p>Unsupported or low-confidence requests wait here. The assistant never acts on them.</p></div>
+    <div id="reviewList" class="stack"></div>
+  </section>
+</main>
+
+<script>
+const EXAMPLES = [
+  "something to get better at pivot tables", "I want to lern pyhton",
+  "show beginner sql lessons", "how do I build dashboards in power bi",
+  "issue my certificate", "cooking recipes"
+];
+const QUICK_TOPICS = ["Excel", "Python", "SQL", "Power BI"];
+const STATUS = {
+  completed:    {label: "AI-assisted result", cls: "good"},
+  llm_failed:   {label: "Keyword fallback (AI unavailable)", cls: "warn"},
+  needs_review: {label: "Needs human review", cls: "warn"},
+  rejected:     {label: "Not searched", cls: "bad"}
+};
+
+const $ = (s) => document.querySelector(s);
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined && text !== null) n.textContent = text;
+  return n;
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* no body */ }
+  if (!res.ok) {
+    let msg = "Request failed (" + res.status + ")";
+    if (data && data.detail) {
+      msg = typeof data.detail === "string" ? data.detail : data.detail.map(d => d.msg).join("; ");
+    }
+    throw new Error(msg);
+  }
+  return data;
+}
+const postJson = (path, body) => api(path, {
+  method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+});
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b === btn));
+  ["search", "history", "review"].forEach(name => { $("#tab-" + name).hidden = name !== btn.dataset.tab; });
+  if (btn.dataset.tab === "history") loadHistory();
+  if (btn.dataset.tab === "review") loadReview();
+}));
+
+/* ---------- search ---------- */
+function renderExamples() {
+  const box = $("#examples");
+  EXAMPLES.forEach(text => {
+    const b = el("button", "chip", text);
+    b.type = "button";
+    b.addEventListener("click", () => { $("#q").value = text; runSearch(); });
+    box.appendChild(b);
+  });
+}
+
+async function loadLearners() {
+  try {
+    const learners = await api("/api/learners");
+    learners.forEach(l => {
+      const o = el("option", "", l.alias + " (" + l.level + ")");
+      o.value = l.learner_id;
+      $("#learner").appendChild(o);
+    });
+  } catch (e) { /* optional feature */ }
+}
+
+async function runSearch() {
+  const query = $("#q").value;
+  const learner = $("#learner").value;
+  const out = $("#result");
+  $("#go").disabled = true;
+  out.replaceChildren(el("div", "skeleton"));
+  try {
+    const data = await postJson("/api/search", {query, learner_id: learner ? Number(learner) : null});
+    renderResult(data);
+    refreshReviewCount();
+  } catch (e) {
+    const box = el("div", "banner bad", e.message);
+    out.replaceChildren(box);
+  } finally {
+    $("#go").disabled = false;
+  }
+}
+$("#searchForm").addEventListener("submit", (e) => { e.preventDefault(); runSearch(); });
+
+function section(title) {
+  const card = el("div", "card");
+  card.appendChild(el("h3", "", title));
+  return card;
+}
+
+function renderResult(r) {
+  const out = $("#result");
+  const wrap = el("div", "stack");
+  const st = STATUS[r.status] || {label: r.status, cls: "warn"};
+
+  const banner = el("div", "banner " + st.cls);
+  banner.appendChild(el("span", "", st.label));
+  wrap.appendChild(banner);
+
+  if (r.message) wrap.appendChild(el("p", "msg", r.message));
+
+  if (r.parsed) {
+    const card = section("How the assistant understood you");
+    const dl = el("dl", "kv");
+    const row = (k, node) => { dl.appendChild(el("dt", "", k)); const dd = el("dd"); dd.appendChild(node); dl.appendChild(dd); };
+    row("Intent", el("span", "", r.parsed.intent.replace("_", " ")));
+    const meter = el("div", "meter"); const fill = el("i");
+    fill.style.width = Math.round((r.parsed.confidence || 0) * 100) + "%";
+    meter.appendChild(fill);
+    row("Confidence", meter);
+    if (r.parsed.topics.length) { const s = el("span"); r.parsed.topics.forEach(t => s.appendChild(el("span", "tag", t))); row("Topics", s); }
+    if (r.parsed.levels.length) row("Level", el("span", "", r.parsed.levels.join(", ")));
+    const fixes = Object.entries(r.parsed.corrections || {});
+    if (fixes.length) row("Spelling fixed", el("span", "", fixes.map(([a, b]) => a + " → " + b).join(", ")));
+    if ((r.parsed.synonyms_applied || []).length) row("Synonyms", el("span", "", r.parsed.synonyms_applied.map(s => s.from + " → " + s.to).join(", ")));
+    if (r.rewritten_query) row("Rewritten search", el("span", "", r.rewritten_query));
+    card.appendChild(dl);
+    wrap.appendChild(card);
+  }
+
+  if (r.suggested_filters && r.suggested_filters.length) {
+    const card = section("Suggested filters");
+    r.suggested_filters.forEach(f => {
+      const line = el("div"); line.style.margin = "6px 0";
+      line.appendChild(el("span", "tag", f.field + ": " + f.value));
+      line.appendChild(el("span", "why", f.reason));
+      card.appendChild(line);
+    });
+    wrap.appendChild(card);
+  }
+
+  if (r.clarifying_question) {
+    const card = section("Quick question");
+    card.appendChild(el("p", "msg", r.clarifying_question));
+    const chips = el("div", "chips");
+    QUICK_TOPICS.forEach(t => {
+      const b = el("button", "chip", t); b.type = "button";
+      b.addEventListener("click", () => { $("#q").value = t; runSearch(); });
+      chips.appendChild(b);
+    });
+    card.appendChild(chips);
+    wrap.appendChild(card);
+  }
+
+  if (r.courses.length) {
+    const head = el("h3", "", "Courses");
+    const grid = el("div", "grid");
+    r.courses.forEach(c => {
+      const card = el("div", "card course");
+      card.appendChild(el("h4", "", c.title));
+      const meta = el("div");
+      meta.appendChild(el("span", "badge lvl-" + c.level, c.level));
+      meta.appendChild(el("span", "why", "  " + c.category));
+      card.appendChild(meta);
+      if (c.reason) card.appendChild(el("div", "why", c.reason));
+      if (typeof c.score === "number") {
+        const m = el("div", "meter"); const f = el("i"); f.style.width = Math.round(c.score * 100) + "%";
+        m.appendChild(f); card.appendChild(m);
+      }
+      grid.appendChild(card);
+    });
+    wrap.appendChild(head); wrap.appendChild(grid);
+  }
+
+  if (r.lessons.length) {
+    const card = section("Lessons");
+    r.lessons.forEach(l => {
+      const row = el("div", "lesson");
+      const left = el("div");
+      left.appendChild(el("div", "", l.title));
+      left.appendChild(el("small", "", l.course_title + " · " + l.summary));
+      row.appendChild(left);
+      row.appendChild(el("small", "", l.duration_min + " min"));
+      card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  }
+
+  if (r.status !== "rejected") {
+    const fb = el("div", "feedback");
+    fb.appendChild(el("span", "", "Was this helpful?"));
+    [["👍", 1], ["👎", -1]].forEach(([icon, rating]) => {
+      const b = el("button", "", icon); b.type = "button";
+      b.setAttribute("aria-label", rating === 1 ? "Helpful" : "Not helpful");
+      b.addEventListener("click", async () => {
+        try { await postJson("/api/feedback", {query_id: r.query_id, rating}); fb.replaceChildren(el("span", "", "Thanks for your feedback!")); }
+        catch (e) { fb.replaceChildren(el("span", "", e.message)); }
+      });
+      fb.appendChild(b);
+    });
+    wrap.appendChild(fb);
+  }
+
+  const bits = ["Query #" + r.query_id];
+  if (r.llm) {
+    bits.push(r.llm.provider + " / " + r.llm.model + " · " + r.llm.status + " · " + r.llm.latency_ms + " ms");
+  }
+  wrap.appendChild(el("div", "foot", bits.join("  |  ")));
+  out.replaceChildren(wrap);
+}
+
+/* ---------- history ---------- */
+function badge(status) {
+  const st = STATUS[status] || {cls: "warn"};
+  return el("span", "banner " + st.cls, status.replace("_", " "));
+}
+
+async function loadHistory() {
+  const body = $("#historyBody");
+  try {
+    const [rows, stats] = await Promise.all([api("/api/history?limit=20"), api("/api/stats")]);
+    const box = $("#stats"); box.replaceChildren();
+    const stat = (label, value) => {
+      const c = el("div", "card stat"); c.appendChild(el("b", "", value)); c.appendChild(el("span", "", label)); box.appendChild(c);
+    };
+    stat("Total searches", stats.total);
+    stat("Completed", stats.by_status.completed || 0);
+    stat("Needs review", stats.by_status.needs_review || 0);
+    stat("AI fallbacks", stats.by_status.llm_failed || 0);
+    stat("Avg AI latency", stats.avg_llm_latency_ms ? stats.avg_llm_latency_ms + " ms" : "n/a");
+
+    body.replaceChildren();
+    if (!rows.length) {
+      const tr = el("tr"); const td = el("td", "empty", "No searches yet."); td.colSpan = 5; tr.appendChild(td); body.appendChild(tr);
+    }
+    rows.forEach(h => {
+      const tr = el("tr", "clickable");
+      tr.appendChild(el("td", "", h.query_id));
+      tr.appendChild(el("td", "", h.raw_query || "(empty)"));
+      tr.appendChild(el("td", "", h.intent || "-"));
+      const s = el("td"); const b = badge(h.status); b.style.padding = "2px 10px"; b.style.fontSize = "12px"; s.appendChild(b); tr.appendChild(s);
+      tr.appendChild(el("td", "", h.created_at));
+      tr.addEventListener("click", () => showTrace(h.query_id));
+      body.appendChild(tr);
+    });
+  } catch (e) {
+    body.replaceChildren();
+    const tr = el("tr"); const td = el("td", "empty", e.message); td.colSpan = 5; tr.appendChild(td); body.appendChild(tr);
+  }
+}
+
+async function showTrace(id) {
+  try {
+    const t = await api("/api/trace/" + id);
+    $("#traceId").textContent = "#" + id;
+    $("#traceJson").textContent = JSON.stringify(t, null, 2);
+    $("#traceBox").hidden = false;
+    $("#traceBox").scrollIntoView({behavior: "smooth", block: "nearest"});
+  } catch (e) { alert(e.message); }
+}
+
+/* ---------- review queue ---------- */
+async function refreshReviewCount() {
+  try {
+    const q = await api("/api/review-queue");
+    const c = $("#reviewCount");
+    c.textContent = q.length; c.hidden = q.length === 0;
+  } catch (e) { /* ignore */ }
+}
+
+async function loadReview() {
+  const list = $("#reviewList");
+  try {
+    const items = await api("/api/review-queue");
+    list.replaceChildren();
+    if (!items.length) { list.appendChild(el("div", "card empty", "Nothing waiting for review.")); }
+    items.forEach(item => {
+      const card = el("div", "card");
+      card.style.display = "flex"; card.style.justifyContent = "space-between"; card.style.gap = "12px"; card.style.flexWrap = "wrap";
+      const left = el("div");
+      left.appendChild(el("div", "", item.raw_query));
+      left.appendChild(el("small", "why", "#" + item.query_id + " · intent: " + (item.intent || "-") + " · confidence: " + item.confidence + " · " + item.created_at));
+      const btn = el("button", "small-btn", "Mark as reviewed");
+      btn.addEventListener("click", async () => {
+        const reviewer = prompt("Your name (recorded in the audit log):");
+        if (!reviewer || !reviewer.trim()) return;
+        try {
+          await postJson("/api/review-queue/" + item.query_id + "/resolve", {reviewer: reviewer.trim(), note: "Reviewed from UI"});
+          loadReview(); refreshReviewCount();
+        } catch (e) { alert(e.message); }
+      });
+      card.appendChild(left); card.appendChild(btn);
+      list.appendChild(card);
+    });
+    refreshReviewCount();
+  } catch (e) { list.replaceChildren(el("div", "card empty", e.message)); }
+}
+
+/* ---------- start ---------- */
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && !["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+    e.preventDefault(); $("#q").focus();
+  }
+});
+renderExamples();
+loadLearners();
+refreshReviewCount();
+</script>
+</body>
+</html>

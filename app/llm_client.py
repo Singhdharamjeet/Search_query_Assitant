@@ -100,7 +100,7 @@ class GeminiProvider(LLMProvider):
         if not self.api_key or self.api_key == "your_key_here":
             raise LLMConfigError("GEMINI_API_KEY is missing. Add it to your .env file.")
         self.timeout = float(timeout_seconds or os.getenv("LLM_TIMEOUT_SECONDS", "20"))
-        self.max_attempts = max_attempts
+        self.max_attempts = int(os.getenv("LLM_MAX_ATTEMPTS", max_attempts))
 
         from google import genai            # imported here so mock mode needs no SDK
         from google.genai import types
