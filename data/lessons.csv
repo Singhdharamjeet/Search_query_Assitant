@@ -1,0 +1,37 @@
+course_id,title,summary,duration_min,position
+1,Navigating the Excel interface,Learn workbooks worksheets cells and basic navigation,8,1
+1,Basic formulas and functions,Use SUM AVERAGE and simple formulas to calculate data,12,2
+1,Formatting and charts,Format cells and build simple charts to present data,10,3
+2,Introduction to pivot tables,Summarize large datasets quickly by dragging fields into a pivot table,14,1
+2,Grouping filtering and slicers,Group data by date and category and filter with slicers,12,2
+2,Building an Excel dashboard,Combine pivot tables and charts into an interactive dashboard,18,3
+3,Variables and data types,Store numbers text and lists in Python variables,10,1
+3,Loops and conditions,Control program flow with if statements and loops,12,2
+3,Writing functions,Create reusable functions to organize code,12,3
+4,Loading data with pandas,Read CSV and Excel files into DataFrames,10,1
+4,Cleaning messy data,Handle missing values duplicates and wrong data types,15,2
+4,Grouping and aggregating,Summarize data with groupby and pivot tables in pandas,14,3
+5,SELECT and WHERE,Retrieve and filter rows from a table,10,1
+5,Joins explained,Combine data from multiple tables using JOIN,14,2
+5,GROUP BY and aggregates,Count sum and average data by group,12,3
+6,Window functions,Rank and compare rows with OVER and PARTITION BY,16,1
+6,Indexes and query plans,Speed up slow queries using indexes and EXPLAIN,15,2
+6,Common table expressions,Write readable multi-step queries with WITH clauses,13,3
+7,Connecting to data sources,Import data from Excel and databases into Power BI,10,1
+7,Building visual reports,Create bar line and map visuals on a report page,14,2
+7,Publishing and sharing,Publish dashboards and share them with your team,10,3
+8,Clear written communication,Write concise emails and messages that get replies,10,1
+8,Active listening,Practice listening techniques for better conversations,9,2
+8,Giving and receiving feedback,Share constructive feedback and respond calmly,11,3
+9,Project lifecycle,Understand initiation planning execution and closure,12,1
+9,Planning tasks and timelines,Break work into tasks and build a simple schedule,14,2
+9,Managing risks and stakeholders,Identify risks and keep stakeholders informed,12,3
+10,What is machine learning,Understand supervised and unsupervised learning,12,1
+10,Training and testing models,Split data and evaluate model accuracy,15,2
+10,Regression and classification,Build simple prediction and categorization models,18,3
+11,SEO basics,Help web pages rank higher in search results,11,1
+11,Social media campaigns,Plan posts and measure engagement,12,2
+11,Email marketing,Build email lists and track open rates,10,3
+12,Spotting phishing emails,Recognize suspicious links and fake messages,9,1
+12,Strong passwords and MFA,Protect accounts with password managers and multi-factor authentication,8,2
+12,Safe data handling,Share and store company data securely,10,3
