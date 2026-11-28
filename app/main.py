@@ -1,11 +1,13 @@
 import logging
+import os
+import secrets
 import sqlite3
 import threading
 import time
 from collections import defaultdict, deque
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -64,6 +66,14 @@ def check_rate_limit(request: Request) -> None:
             raise HTTPException(429, "Too many searches. Please wait a minute and try again.")
         queue.append(now)
 
+def require_reviewer(x_review_passcode: str | None = Header(default=None)):
+    """If REVIEW_PASSCODE is set, review endpoints need it in a header."""
+    expected = os.getenv("REVIEW_PASSCODE")
+    if not expected:
+        return
+    given = (x_review_passcode or "").encode()
+    if not secrets.compare_digest(given, expected.encode()):
+        raise HTTPException(401, "Reviewer passcode required.")
 
 # ------------------------------------------------------------------ models
 class SearchRequest(BaseModel):
@@ -157,7 +167,7 @@ def learners():
         conn.close()
 
 
-@app.get("/api/review-queue")
+@app.get("/api/review-queue", dependencies=[Depends(require_reviewer)])
 def review_queue():
     conn = open_db()
     try:
@@ -166,7 +176,7 @@ def review_queue():
         conn.close()
 
 
-@app.post("/api/review-queue/{query_id}/resolve")
+@app.post("/api/review-queue/{query_id}/resolve", dependencies=[Depends(require_reviewer)])
 def resolve(query_id: int, body: ReviewRequest):
     conn = open_db()
     try:

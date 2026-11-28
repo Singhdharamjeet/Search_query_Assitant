@@ -408,7 +408,7 @@ async function refreshReviewCount() {
 async function loadReview() {
   const list = $("#reviewList");
   try {
-    const items = await api("/api/review-queue");
+    const items = await reviewApi("/api/review-queue");
     list.replaceChildren();
     if (!items.length) { list.appendChild(el("div", "card empty", "Nothing waiting for review.")); }
     items.forEach(item => {
@@ -422,7 +422,10 @@ async function loadReview() {
         const reviewer = prompt("Your name (recorded in the audit log):");
         if (!reviewer || !reviewer.trim()) return;
         try {
-          await postJson("/api/review-queue/" + item.query_id + "/resolve", {reviewer: reviewer.trim(), note: "Reviewed from UI"});
+          await reviewApi("/api/review-queue/" + item.query_id + "/resolve", {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({reviewer: reviewer.trim(), note: "Reviewed from UI"})
+          });
           loadReview(); refreshReviewCount();
         } catch (e) { alert(e.message); }
       });
